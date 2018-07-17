@@ -3,6 +3,10 @@ store_data: true
 keep_prev: false
 
 flags: null
+label_flag: {
+  "language": ["Chinese", "English", "Other"],
+  "Quality" : ["Print", "Write", "Other"],
+}
 labels: null
 sort_labels: true
 validate_label: null

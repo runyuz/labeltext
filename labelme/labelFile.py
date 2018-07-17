@@ -3,6 +3,7 @@ import json
 import os.path
 import sys
 
+# TODO: (modified)
 
 PY2 = sys.version_info[0] == 2
 
@@ -21,7 +22,7 @@ class LabelFile(object):
         self.imageData = None
         if filename is not None:
             self.load(filename)
-        self.filename = filename
+        self.filename = filename    # Name of .json file
 
     def load(self, filename):
         keys = [
@@ -35,8 +36,8 @@ class LabelFile(object):
         try:
             with open(filename, 'rb' if PY2 else 'r') as f:
                 data = json.load(f)
-            if data['imageData'] is not None:
-                imageData = base64.b64decode(data['imageData'])
+            if data['imageData'] is not None:   # TODO: reconsider this part, whether it is necessary
+                imageData = base64.b64decode(data['imageData']) # image data is stored!
             else:
                 # relative path from label file to relative path from cwd
                 imagePath = os.path.join(os.path.dirname(filename),
@@ -48,7 +49,7 @@ class LabelFile(object):
             lineColor = data['lineColor']
             fillColor = data['fillColor']
             shapes = (
-                (s['label'], s['points'], s['line_color'], s['fill_color'])
+                (s['label'], s['points'], s['line_color'], s['fill_color'], s['label_flags']) # Add another feature!
                 for s in data['shapes']
             )
         except Exception as e:

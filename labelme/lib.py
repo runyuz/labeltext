@@ -12,11 +12,13 @@ here = osp.dirname(osp.abspath(__file__))
 
 
 def newIcon(icon):
+    """Create a new QtGui Icon."""
     icons_dir = osp.join(here, 'icons')
     return QtGui.QIcon(osp.join(':/', icons_dir, '%s.png' % icon))
 
 
 def newButton(text, icon=None, slot=None):
+    """Create a new button."""
     b = QtWidgets.QPushButton(text)
     if icon is not None:
         b.setIcon(newIcon(icon))

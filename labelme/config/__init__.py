@@ -71,3 +71,9 @@ def get_config(config_from_args=None, config_file=None):
                     validate_item=validate_config_item)
 
     return config
+
+def modify_config():
+    # TODO: understand config file.
+    d = YAML::load_file('/tmp/test.yml') #Load
+    d['content']['session'] = 2 #Modify
+    File.open('/tmp/test.yml', 'w') {|f| f.write d.to_yaml } #Store

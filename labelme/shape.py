@@ -32,6 +32,7 @@ class Shape(object):
     hvertex_fill_color = DEFAULT_HVERTEX_FILL_COLOR
     point_type = P_ROUND
     point_size = 8
+    # the scale of the figure
     scale = 1.0
 
     def __init__(self, label=None, line_color=None):
@@ -120,7 +121,7 @@ class Shape(object):
                 painter.fillPath(line_path, color)
 
     def drawVertex(self, path, i):
-        d = self.point_size / self.scale
+        d = self.point_size / self.scale  # why / ?
         shape = self.point_type
         point = self.points[i]
         if i == self._highlightIndex:
@@ -129,7 +130,7 @@ class Shape(object):
         if self._highlightIndex is not None:
             self.vertex_fill_color = self.hvertex_fill_color
         else:
-            self.vertex_fill_color = Shape.vertex_fill_color
+            self.vertex_fill_color = self.vertex_fill_color
         if shape == self.P_SQUARE:
             path.addRect(point.x() - d / 2, point.y() - d / 2, d, d)
         elif shape == self.P_ROUND:
@@ -138,6 +139,7 @@ class Shape(object):
             assert False, "unsupported vertex shape"
 
     def nearestVertex(self, point, epsilon):
+        """Return the nearest vertex."""
         min_distance = float('inf')
         min_i = None
         for i, p in enumerate(self.points):
@@ -148,6 +150,7 @@ class Shape(object):
         return min_i
 
     def nearestEdge(self, point, epsilon):
+        """Return the nearest edge."""
         min_distance = float('inf')
         post_i = None
         for i in range(len(self.points)):

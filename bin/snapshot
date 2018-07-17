@@ -1,6 +1,6 @@
 #!/bin/bash
 N=5  # N seconds per frame
-echo "Input directory:"
+echo "Input directory"
 read in_dir
 echo "Output directory:"
 read out_dir

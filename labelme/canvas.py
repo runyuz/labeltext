@@ -20,7 +20,7 @@ CURSOR_GRAB = QtCore.Qt.OpenHandCursor
 
 class Canvas(QtWidgets.QWidget):
 
-    zoomRequest = QtCore.Signal(int, QtCore.QPoint)
+    zoomRequest = QtCore.Signal(int, QtCore.QPoint) # TODO: 
     scrollRequest = QtCore.Signal(int, int)
     newShape = QtCore.Signal()
     selectionChanged = QtCore.Signal(bool)
@@ -40,8 +40,8 @@ class Canvas(QtWidgets.QWidget):
         # Initialise local state.
         self.mode = self.EDIT
         self.shapes = []
-        self.shapesBackups = []
-        self.current = None
+        self.shapesBackups = [] # enable shape restore
+        self.current = None # current shape (points)
         self.selectedShape = None  # save the selected shape here
         self.selectedShapeCopy = None
         self.lineColor = QtGui.QColor(0, 0, 255)
@@ -105,12 +105,18 @@ class Canvas(QtWidgets.QWidget):
         return self.visible.get(shape, True)
 
     def drawing(self):
+        """Whether the mode is creating."""
         return self.mode == self.CREATE
 
     def editing(self):
+        """Whether the mode is editting."""
         return self.mode == self.EDIT
 
     def setEditing(self, value=True):
+        """
+        Set the mode to be editting if value is True.
+        If the mode is creating, unhighlight everything.
+        """
         self.mode = self.EDIT if value else self.CREATE
         if not value:  # Create
             self.unHighlight()
@@ -122,6 +128,7 @@ class Canvas(QtWidgets.QWidget):
         self.hVertex = self.hShape = None
 
     def selectedVertex(self):
+        """Whether a vertex has been highlighted."""
         return self.hVertex is not None
 
     def mouseMoveEvent(self, ev):
