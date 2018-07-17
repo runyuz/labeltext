@@ -1,0 +1,30 @@
+#!/bin/bash
+N=5  # N seconds per frame
+echo "Input directory:"
+read in_dir
+echo "Output directory:"
+read out_dir
+
+if [ ! -d ${in_dir} ]; then
+    echo "Error: input directory does not exist."
+    exit 1
+    EOF
+fi
+
+if [ ! -d ${out_dir} ]; then
+    echo "+ mkdir ${out_dir}"
+    mkdir ${out_dir}
+else
+    echo "+ rm -rf ${out_dir}/*"
+    rm -rf ${out_dir}/*
+fi
+
+for video in `find ${in_dir} -name "*.MP4"`
+do
+    dir_name=$(basename ${video} .MP4)
+    echo "+ mkdir ${out_dir}/${dir_name}"
+    mkdir ${out_dir}/${dir_name}
+    echo "Cutting ${video}..."
+    ffmpeg -i ${video} -f image2 -vf fps=fps=1/${N} ${out_dir}/${dir_name}/out%02d.png &> /dev/null
+    echo "Finish cutting ${video}!"
+done
