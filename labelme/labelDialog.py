@@ -36,8 +36,11 @@ class SelectBox(QtWidgets.QGroupBox):
             self.selectItem.append(QtWidgets.QRadioButton(content[i]))
             layout.addWidget(self.selectItem[i])
             self.buttonGroup.addButton(self.selectItem[i])
+
         self.selectItem[0].setChecked(True)  # 默认选第一个
+        self._content = content[0]
         self.buttonGroup.buttonClicked.connect(self.contentChange)
+        # self.setFlat(True)
 
         self.setLayout(layout)
     
@@ -87,10 +90,10 @@ class LabelDialog(QtWidgets.QDialog):
         self.language.setParent(self)
         layout.addWidget(self.language)
 
-        # type
-        self.type = SelectBox('Type', 'print', 'write')
-        self.type.setParent(self)
-        layout.addWidget(self.type)
+        # font
+        self.font = SelectBox('Font', 'print', 'write')
+        self.font.setParent(self)
+        layout.addWidget(self.font)
 
         # buttons
         self.buttonBox = bb = QtWidgets.QDialogButtonBox(  # presents buttons in a layout that is appropriate to the current widget style
@@ -150,12 +153,14 @@ class LabelDialog(QtWidgets.QDialog):
             text = text.trimmed()
         self.edit.setText(text)
 
-    def popUp(self, text=None, move=True):
+    def popUp(self, text=None, quanlity=None, language=None, font=None, move=True):
         # if text is None, the previous label in self.edit is kept
+        # edit
         if text is None:
             text = self.edit.text()
         self.edit.setText(text)
         self.edit.setSelection(0, len(text))  # 全选
+        # labelList
         items = self.labelList.findItems(text, QtCore.Qt.MatchFixedString)
         if items:
             assert len(items) == 1
@@ -163,6 +168,17 @@ class LabelDialog(QtWidgets.QDialog):
             row = self.labelList.row(items[0])
             self.edit.completer().setCurrentRow(row)
         self.edit.setFocus(QtCore.Qt.PopupFocusReason)  # 可直接编辑
+        # move
         if move:
             self.move(QtGui.QCursor.pos())  # 移动鼠标到ok
-        return self.edit.text() if self.exec_() else None   # 返回编辑过的label
+        # quanlity
+        if quanlity is not None:
+            self.quanlity.content = quanlity
+        # language
+        if language is not None:
+            self.language.content = language
+        # font
+        if font is not None:
+            self.font.content = font
+        return (self.edit.text(), self.quanlity.content, self.language.content, self.font.content)\
+            if self.exec_() else None   # 返回编辑过的label

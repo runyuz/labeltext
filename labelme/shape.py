@@ -34,8 +34,11 @@ class Shape(object):
     point_size = 8
     scale = 1.0
 
-    def __init__(self, label=None, line_color=None):
+    def __init__(self, label=None, quanlity=None, language=None, font=None, line_color=None):
         self.label = label
+        self._quanlity = quanlity
+        self._language = language
+        self._font = font
         self.points = []
         self.fill = False
         # Whether the polygon is selected
@@ -56,6 +59,27 @@ class Shape(object):
             # with an object attribute. Currently this
             # is used for drawing the pending line a different color.
             self.line_color = line_color
+
+    @property
+    def quanlity(self):
+        return self._quanlity
+    @quanlity.setter
+    def quanlity(self, value):
+        self._quanlity = value
+
+    @property
+    def language(self):
+        return self._language
+    @language.setter
+    def language(self, value):
+        self._language = value
+
+    @property
+    def font(self):
+        return self._font
+    @font.setter
+    def font(self, value):
+        self._font = value
 
     def close(self):
         if len(self.points) <= 2:
@@ -184,7 +208,7 @@ class Shape(object):
         self._highlightIndex = None
 
     def copy(self):
-        shape = Shape(self.label)
+        shape = Shape(self.label, self.quanlity, self.language, self.font)
         shape.points = [p for p in self.points]
         shape.fill = self.fill
         shape.selected = self.selected

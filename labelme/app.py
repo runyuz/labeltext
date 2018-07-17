@@ -660,7 +660,9 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         if not self.canvas.editing():
             return
         item = item if item else self.currentItem()
-        text = self.labelDialog.popUp(item.text())
+        shape = self.labelList.get_shape_from_item(item)
+        (text, quanlity, language, font) = self.labelDialog.popUp\
+            (item.text(), shape.quanlity, shape.language, shape.font)
         if text is None:
             return
         if not self.validateLabel(text):
@@ -669,6 +671,9 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
                               .format(text, self._config['validate_label']))
             return
         item.setText(text)
+        shape.quanlity = quanlity
+        shape.language = language
+        shape.font = font
         self.setDirty()
         if not self.uniqLabelList.findItems(text, Qt.MatchExactly):
             self.uniqLabelList.addItem(text)
@@ -730,8 +735,8 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
 
     def loadLabels(self, shapes):
         s = []
-        for label, points, line_color, fill_color in shapes:
-            shape = Shape(label=label)
+        for label, quanlity, language, font, points, line_color, fill_color in shapes:
+            shape = Shape(label, quanlity, language, font)
             for x, y in points:
                 shape.addPoint(QtCore.QPoint(x, y))
             shape.close()
@@ -755,6 +760,9 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
 
         def format_shape(s):
             return dict(label=str(s.label),
+                        quanlity=str(s.quanlity),
+                        language=str(s.language),
+                        font=str(s.font),
                         line_color=s.line_color.getRgb()
                         if s.line_color != self.lineColor else None,
                         fill_color=s.fill_color.getRgb()
@@ -822,7 +830,11 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         text = None
         if items:
             text = items[0].text()
-        text = self.labelDialog.popUp(text)
+            shape = self.labelList.get_shape_from_item(items[0])
+            (text, quanlity, language, font) = self.labelDialog.popUp\
+                (text, shape.quanlity, shape.language, shape.font)
+        else:
+            (text, quanlity, language, font) = self.labelDialog.popUp()
         if text is not None and not self.validateLabel(text):
             self.errorMessage('Invalid label',
                               "Invalid label '{}' with validation type '{}'"
@@ -832,7 +844,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             self.canvas.undoLastLine()
             self.canvas.shapesBackups.pop()
         else:
-            self.addLabel(self.canvas.setLastLabel(text))
+            self.addLabel(self.canvas.setLastLabel(text, quanlity, language, font))
             self.actions.editMode.setEnabled(True)
             self.actions.undoLastPoint.setEnabled(False)
             self.actions.undo.setEnabled(True)
