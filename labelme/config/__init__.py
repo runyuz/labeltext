@@ -7,6 +7,7 @@ from labelme import logger
 
 
 here = osp.dirname(osp.abspath(__file__))
+print(here)
 
 
 def update_dict(target_dict, new_dict, validate_item=None):

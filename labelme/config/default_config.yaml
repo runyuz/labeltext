@@ -1,6 +1,6 @@
 auto_save: false
 store_data: true
-keep_prev: false
+keep_prev: true
 
 flags: null
 labels: null
