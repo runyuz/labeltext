@@ -978,10 +978,15 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             self.loadFlags({k: False for k in self._config['flags']})
         if self.labelFile:
             self.loadLabels(self.labelFile.shapes)
+            print(self.canvas.shapes)
             if self.labelFile.flags is not None:
                 self.loadFlags(self.labelFile.flags)
+            if self._config['keep_prev'] and not self.canvas.shapes:
+                self.loadShapes(prev_shapes)
+                self.setDirty()
         elif self._config['keep_prev']:
             self.loadShapes(prev_shapes)
+            self.setDirty()
         self.setClean()
         self.canvas.setEnabled(True)
         self.adjustScale(initial=True)
