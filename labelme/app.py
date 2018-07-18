@@ -661,10 +661,11 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             return
         item = item if item else self.currentItem()
         shape = self.labelList.get_shape_from_item(item)
-        (text, quanlity, language, font) = self.labelDialog.popUp\
+        newValue = self.labelDialog.popUp\
             (item.text(), shape.quanlity, shape.language, shape.font)
-        if text is None:
+        if newValue is None:
             return
+        text, quanlity, language, font = newValue
         if not self.validateLabel(text):
             self.errorMessage('Invalid label',
                               "Invalid label '{}' with validation type '{}'"
@@ -831,10 +832,14 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         if items:
             text = items[0].text()
             shape = self.labelList.get_shape_from_item(items[0])
-            (text, quanlity, language, font) = self.labelDialog.popUp\
+            newValue = self.labelDialog.popUp\
                 (text, shape.quanlity, shape.language, shape.font)
         else:
-            (text, quanlity, language, font) = self.labelDialog.popUp()
+            newValue = self.labelDialog.popUp()
+        if newValue is not None:
+            (text, quanlity, language, font) = newValue
+        else:
+            text = None
         if text is not None and not self.validateLabel(text):
             self.errorMessage('Invalid label',
                               "Invalid label '{}' with validation type '{}'"
