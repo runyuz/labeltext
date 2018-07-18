@@ -619,7 +619,10 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         self.toggleDrawMode(False, createMode='polygon')
 
     def setEditMode(self):
-        self.toggleDrawMode(True)
+        self.canvas.setEditing(True)
+        self.actions.createMode.setEnabled(True)
+        self.actions.createRectangleMode.setEnabled(True)
+        self.actions.editMode.setEnabled(False)
 
     def updateFileMenu(self):
         current = self.filename
@@ -657,8 +660,8 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         return False
 
     def editLabel(self, item=None):
-        if not self.canvas.editing():
-            return
+        # if not self.canvas.editing():
+        #     return
         item = item if item else self.currentItem()
         shape = self.labelList.get_shape_from_item(item)
         newValue = self.labelDialog.popUp\
