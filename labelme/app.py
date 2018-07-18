@@ -973,15 +973,15 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         self.filename = filename
         if self._config['keep_prev']:
             prev_shapes = self.canvas.shapes
-        self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image))
+        self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image))  # 清空了self.canvas.shapes
         if self._config['flags']:
             self.loadFlags({k: False for k in self._config['flags']})
-        if self._config['keep_prev']:
-            self.loadShapes(prev_shapes)
         if self.labelFile:
             self.loadLabels(self.labelFile.shapes)
             if self.labelFile.flags is not None:
                 self.loadFlags(self.labelFile.flags)
+        elif self._config['keep_prev']:
+            self.loadShapes(prev_shapes)
         self.setClean()
         self.canvas.setEnabled(True)
         self.adjustScale(initial=True)
