@@ -687,12 +687,16 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         items = self.fileListWidget.selectedItems()
         if not items:
             return
-        item = items[0]
-
-        if not self.mayContinue():
+        item = str(items[0].text())
+        if item == self.filename:
             return
 
-        currIndex = self.imageList.index(str(item.text()))
+        if not self.mayContinue():
+            self.fileListWidget.setCurrentRow(self.imageList.index(self.filename))
+            return
+
+        self.filename = item
+        currIndex = self.imageList.index(item)
         if currIndex < len(self.imageList):
             filename = self.imageList[currIndex]
             if filename:
@@ -909,11 +913,6 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
     def loadFile(self, filename=None):
         """Load the specified file, or the last opened file if None."""
         # changing fileListWidget loads file
-        if (filename in self.imageList and
-                self.fileListWidget.currentRow() !=
-                self.imageList.index(filename)):
-            self.fileListWidget.setCurrentRow(self.imageList.index(filename))
-            return
 
         self.resetState()
         self.canvas.setEnabled(False)
@@ -981,16 +980,14 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             self.loadFlags({k: False for k in self._config['flags']})
         if self.labelFile:
             self.loadLabels(self.labelFile.shapes)
-            print(self.canvas.shapes)
             if self.labelFile.flags is not None:
                 self.loadFlags(self.labelFile.flags)
-            if self._config['keep_prev'] and not self.canvas.shapes:
-                self.loadShapes(prev_shapes)
-                self.setDirty()
-        elif self._config['keep_prev']:
+            self.setClean()
+        elif self._config['keep_prev'] and prev_shapes:
             self.loadShapes(prev_shapes)
             self.setDirty()
-        self.setClean()
+        else:
+            self.setClean()
         self.canvas.setEnabled(True)
         self.adjustScale(initial=True)
         self.paintCanvas()
@@ -1053,9 +1050,6 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             self.loadFile(filename)
 
     def openPrevImg(self, _value=False):
-        if not self.mayContinue():
-            return
-
         if len(self.imageList) <= 0:
             return
 
@@ -1066,12 +1060,10 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         if currIndex - 1 >= 0:
             filename = self.imageList[currIndex - 1]
             if filename:
-                self.loadFile(filename)
+                self.fileListWidget.setCurrentRow(self.imageList.index(filename))
+
 
     def openNextImg(self, _value=False, load=True):
-        if not self.mayContinue():
-            return
-
         if len(self.imageList) <= 0:
             return
 
@@ -1082,10 +1074,9 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             currIndex = self.imageList.index(self.filename)
             if currIndex + 1 < len(self.imageList):
                 filename = self.imageList[currIndex + 1]
-        self.filename = filename
 
-        if self.filename and load:
-            self.loadFile(self.filename)
+        if filename and load:
+            self.fileListWidget.setCurrentRow(self.imageList.index(filename))
 
     def openFile(self, _value=False):
         if not self.mayContinue():
@@ -1280,7 +1271,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         for imgPath in self.scanAllImages(dirpath):
             item = QtWidgets.QListWidgetItem(imgPath)
             self.fileListWidget.addItem(item)
-        self.openNextImg(load=load)
+        self.openNextImg(load=load) # 从空文件load next
 
     def scanAllImages(self, folderPath):
         extensions = ['.%s' % fmt.data().decode("ascii").lower()
