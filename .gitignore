@@ -10,5 +10,4 @@ var/
 env/
 tests/
 .vscode
-examples/
 videos/
