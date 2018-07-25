@@ -12,6 +12,8 @@ from labelme.lib import newIcon
 # TODO(unknown):
 # - Calculate optimal position so as not to go out of screen area.
 
+def wordsValidator():
+    return QtGui.QRegExpValidator(QtCore.QRegExp(r'^[^ \t][0-9]+'), None)
 
 class LabelQLineEdit(QtWidgets.QLineEdit):
 
@@ -61,7 +63,9 @@ class SelectBox(QtWidgets.QGroupBox):
 
 class LabelDialog(QtWidgets.QDialog):
 
-    def __init__(self, text="Enter object label", parent=None, labels=None,
+    def __init__(self, text="Enter object label", 
+                 words="Enter number of letters",
+                 parent=None, labels=None,
                  sort_labels=True, show_text_field=True):
         super(LabelDialog, self).__init__(parent)
 
@@ -73,12 +77,22 @@ class LabelDialog(QtWidgets.QDialog):
         # editingFinished: the Return or Enter key is pressed or the line edit loses focus
         # postProcess 检查有效性，然后设为edit.text()
         self.edit.editingFinished.connect(self.postProcess)
-        subLayout = QtWidgets.QHBoxLayout()
-        subLayout.addWidget(self.labelLabel)
-        subLayout.addWidget(self.edit)
+        labelLayout = QtWidgets.QHBoxLayout()
+        labelLayout.addWidget(self.labelLabel)
+        labelLayout.addWidget(self.edit)
         layout = QtWidgets.QVBoxLayout()
         if show_text_field:
-            layout.addLayout(subLayout)
+            layout.addLayout(labelLayout)
+
+        # words
+        self.wordsLabel = QtWidgets.QLabel('Letters:', self)
+        self.words = QtWidgets.QLineEdit()
+        self.words.setPlaceholderText(words)
+        self.words.setValidator(wordsValidator())
+        wordsLayout = QtWidgets.QHBoxLayout()
+        wordsLayout.addWidget(self.wordsLabel)
+        wordsLayout.addWidget(self.words)
+        layout.addLayout(wordsLayout)
 
         # quanlity
         self.quanlity = SelectBox('Quanlity', 'High', 'Middle', 'Low')
@@ -153,7 +167,7 @@ class LabelDialog(QtWidgets.QDialog):
             text = text.trimmed()
         self.edit.setText(text)
 
-    def popUp(self, text=None, quanlity=None, language=None, font=None, move=True):
+    def popUp(self, text=None, words=None, quanlity=None, language=None, font=None, move=True):
         # if text is None, the previous label in self.edit is kept
         # edit
         if text is None:
@@ -171,6 +185,9 @@ class LabelDialog(QtWidgets.QDialog):
         # move
         if move:
             self.move(QtGui.QCursor.pos())  # 移动鼠标到ok
+        # words
+        if words is not None:
+            self.words.setText(str(words))
         # quanlity
         if quanlity is not None:
             self.quanlity.content = quanlity
@@ -180,5 +197,5 @@ class LabelDialog(QtWidgets.QDialog):
         # font
         if font is not None:
             self.font.content = font
-        return (self.edit.text(), self.quanlity.content, self.language.content, self.font.content)\
+        return (self.edit.text(), int(self.words.text()), self.quanlity.content, self.language.content, self.font.content)\
             if self.exec_() else None   # 返回编辑过的label

@@ -665,16 +665,17 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         item = item if item else self.currentItem()
         shape = self.labelList.get_shape_from_item(item)
         newValue = self.labelDialog.popUp\
-            (item.text(), shape.quanlity, shape.language, shape.font)
+            (item.text(), shape.words, shape.quanlity, shape.language, shape.font)
         if newValue is None:
             return
-        text, quanlity, language, font = newValue
+        text, words, quanlity, language, font = newValue
         if not self.validateLabel(text):
             self.errorMessage('Invalid label',
                               "Invalid label '{}' with validation type '{}'"
                               .format(text, self._config['validate_label']))
             return
         item.setText(text)
+        shape.words = words
         shape.quanlity = quanlity
         shape.language = language
         shape.font = font
@@ -743,8 +744,8 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
 
     def loadLabels(self, shapes):
         s = []
-        for label, quanlity, language, font, points, line_color, fill_color in shapes:
-            shape = Shape(label, quanlity, language, font)
+        for label, words, quanlity, language, font, points, line_color, fill_color in shapes:
+            shape = Shape(label, words, quanlity, language, font)
             for x, y in points:
                 shape.addPoint(QtCore.QPoint(x, y))
             shape.close()
@@ -768,6 +769,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
 
         def format_shape(s):
             return dict(label=str(s.label),
+                        words=int(s.words),
                         quanlity=str(s.quanlity),
                         language=str(s.language),
                         font=str(s.font),
@@ -840,11 +842,11 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             text = items[0].text()
             shape = self.labelList.get_shape_from_item(items[0])
             newValue = self.labelDialog.popUp\
-                (text, shape.quanlity, shape.language, shape.font)
+                (text, shape.words, shape.quanlity, shape.language, shape.font)
         else:
             newValue = self.labelDialog.popUp()
         if newValue is not None:
-            (text, quanlity, language, font) = newValue
+            (text, words, quanlity, language, font) = newValue
         else:
             text = None
         if text is not None and not self.validateLabel(text):
@@ -856,7 +858,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             self.canvas.undoLastLine()
             self.canvas.shapesBackups.pop()
         else:
-            self.addLabel(self.canvas.setLastLabel(text, quanlity, language, font))
+            self.addLabel(self.canvas.setLastLabel(text, words, quanlity, language, font))
             self.actions.editMode.setEnabled(True)
             self.actions.undoLastPoint.setEnabled(False)
             self.actions.undo.setEnabled(True)

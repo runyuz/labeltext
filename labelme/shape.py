@@ -34,8 +34,9 @@ class Shape(object):
     point_size = 8
     scale = 1.0
 
-    def __init__(self, label=None, quanlity=None, language=None, font=None, line_color=None):
+    def __init__(self, label=None, words=None, quanlity=None, language=None, font=None, line_color=None):
         self.label = label
+        self._words = words
         self._quanlity = quanlity
         self._language = language
         self._font = font
@@ -59,6 +60,12 @@ class Shape(object):
             # with an object attribute. Currently this
             # is used for drawing the pending line a different color.
             self.line_color = line_color
+    @property
+    def words(self):
+        return self._words
+    @words.setter
+    def words(self, value):
+        self._words = value
 
     @property
     def quanlity(self):
@@ -208,7 +215,7 @@ class Shape(object):
         self._highlightIndex = None
 
     def copy(self):
-        shape = Shape(self.label, self.quanlity, self.language, self.font)
+        shape = Shape(self.label, self.words, self.quanlity, self.language, self.font)
         shape.points = [p for p in self.points]
         shape.fill = self.fill
         shape.selected = self.selected
