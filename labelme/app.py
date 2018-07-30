@@ -917,6 +917,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         """Load the specified file, or the last opened file if None."""
         # changing fileListWidget loads file
 
+        prev_filename = self.imagePath
         self.resetState()
         self.canvas.setEnabled(False)
         if filename is None:
@@ -974,10 +975,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
                 .format(filename, ','.join(formats)))
             self.status("Error reading %s" % filename)
             return False
-        if self._config['track']:
-            prev_img = self.image
-            prev_shapes = self.canvas.shapes
-        elif self._config['keep_prev']:
+        if self._config['track'] or self._config['keep_prev']:
             prev_shapes = self.canvas.shapes
         self.image = image
         self.filename = filename
@@ -990,12 +988,11 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
                 self.loadFlags(self.labelFile.flags)
             self.setClean()
         if not self.canvas.shapes:  # labelFile里没有shape
-            if self._config['track'] and prev_img and prev_shapes:
-                new_shapes = track(prev_img, self.image, prev_shapes)
+            if self._config['track'] and prev_filename and prev_shapes:
+                new_shapes = track(prev_filename, filename, prev_shapes)
                 self.loadShapes(new_shapes)
                 self.setDirty()
             elif self._config['keep_prev'] and prev_shapes:
-                print('keep_prev')
                 self.loadShapes(prev_shapes)
                 self.setDirty()
         self.canvas.setEnabled(True)
