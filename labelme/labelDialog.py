@@ -76,7 +76,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit.setValidator(labelValidator())  # 输入检查
         # editingFinished: the Return or Enter key is pressed or the line edit loses focus
         # postProcess 检查有效性，然后设为edit.text()
-        self.edit.editingFinished.connect(self.postProcess)
+        self.edit.editingFinished.connect(self.editPostProcess)
         labelLayout = QtWidgets.QHBoxLayout()
         labelLayout.addWidget(self.labelLabel)
         labelLayout.addWidget(self.edit)
@@ -89,6 +89,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.words = QtWidgets.QLineEdit()
         self.words.setPlaceholderText(words)
         self.words.setValidator(wordsValidator())
+        self.words.editingFinished.connect(self.wordsPostProcess)
         wordsLayout = QtWidgets.QHBoxLayout()
         wordsLayout.addWidget(self.wordsLabel)
         wordsLayout.addWidget(self.words)
@@ -159,13 +160,21 @@ class LabelDialog(QtWidgets.QDialog):
         if text:
             self.accept()
 
-    def postProcess(self):
+    def editPostProcess(self):
         text = self.edit.text()
         if hasattr(text, 'strip'):
             text = text.strip()
         else:
             text = text.trimmed()
         self.edit.setText(text)
+
+    def wordsPostProcess(self):
+        num = self.words.text()
+        if hasattr(num, 'strip'):
+            num = num.strip()
+        else:
+            num = num.trimmed()
+        self.words.setText(num)
 
     def popUp(self, text=None, words=None, quanlity=None, language=None, font=None, move=True):
         # if text is None, the previous label in self.edit is kept
