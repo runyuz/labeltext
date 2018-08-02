@@ -34,12 +34,10 @@ class Shape(object):
     point_size = 8
     scale = 1.0
 
-    def __init__(self, label=None, words=None, quanlity=None, language=None, font=None, line_color=None):
+    def __init__(self, label=None, words=None, flags={}, line_color=None):
         self.label = label
         self._words = words
-        self._quanlity = quanlity
-        self._language = language
-        self._font = font
+        self._flags = flags
         self.points = []
         self.fill = False
         # Whether the polygon is selected
@@ -68,25 +66,11 @@ class Shape(object):
         self._words = value
 
     @property
-    def quanlity(self):
-        return self._quanlity
-    @quanlity.setter
-    def quanlity(self, value):
-        self._quanlity = value
-
-    @property
-    def language(self):
-        return self._language
-    @language.setter
-    def language(self, value):
-        self._language = value
-
-    @property
-    def font(self):
-        return self._font
-    @font.setter
-    def font(self, value):
-        self._font = value
+    def flags(self):
+        return self._flags
+    @flags.setter
+    def flags(self, value):
+        self._flags = value
 
     def close(self):
         if len(self.points) <= 2:
@@ -215,7 +199,7 @@ class Shape(object):
         self._highlightIndex = None
 
     def copy(self):
-        shape = Shape(self.label, self.words, self.quanlity, self.language, self.font)
+        shape = Shape(self.label, self.words, self.flags)
         shape.points = [p for p in self.points]
         shape.fill = self.fill
         shape.selected = self.selected

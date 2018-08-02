@@ -28,16 +28,17 @@ class LabelQLineEdit(QtWidgets.QLineEdit):
             super(LabelQLineEdit, self).keyPressEvent(e)
 
 class SelectBox(QtWidgets.QGroupBox):
-    def __init__(self, title, *content):
+    def __init__(self, title, content):
         super(SelectBox, self).__init__(title)
 
         self.selectItem = []
         self.buttonGroup = QtWidgets.QButtonGroup()
         layout = QtWidgets.QHBoxLayout()
-        for i in range(len(content)):
-            self.selectItem.append(QtWidgets.QRadioButton(content[i]))
-            layout.addWidget(self.selectItem[i])
-            self.buttonGroup.addButton(self.selectItem[i])
+        for v in content:
+            button = QtWidgets.QRadioButton(v)
+            self.selectItem.append(button)
+            layout.addWidget(button)
+            self.buttonGroup.addButton(button)
 
         self.selectItem[0].setChecked(True)  # 默认选第一个
         self._content = content[0]
@@ -65,7 +66,7 @@ class LabelDialog(QtWidgets.QDialog):
 
     def __init__(self, text="Enter object label", 
                  words="Enter number of letters",
-                 parent=None, labels=None,
+                 parent=None, labels=None, flags={},
                  sort_labels=True, show_text_field=True):
         super(LabelDialog, self).__init__(parent)
 
@@ -95,21 +96,14 @@ class LabelDialog(QtWidgets.QDialog):
         wordsLayout.addWidget(self.words)
         layout.addLayout(wordsLayout)
 
-        # quanlity
-        self.quanlity = SelectBox('Quanlity', 'High', 'Middle', 'Low')
-        self.quanlity.setParent(self)
-        layout.addWidget(self.quanlity)
-
-        # language
-        self.language = SelectBox('Language', 'Chinese', 'English', 'Other')
-        self.language.setParent(self)
-        layout.addWidget(self.language)
-
-        # font
-        self.font = SelectBox('Font', 'print', 'write')
-        self.font.setParent(self)
-        layout.addWidget(self.font)
-
+        # select boxes
+        self.boxes = {}
+        for key, value in flags.items():
+            box = SelectBox(key, value)
+            box.setParent(self)
+            layout.addWidget(box)
+            self.boxes[key] = box
+        
         # buttons
         self.buttonBox = bb = QtWidgets.QDialogButtonBox(  # presents buttons in a layout that is appropriate to the current widget style
             QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel,
@@ -182,7 +176,8 @@ class LabelDialog(QtWidgets.QDialog):
             num = num.trimmed()
         self.words.setText(num)
 
-    def popUp(self, text=None, words=None, quanlity=None, language=None, font=None, move=True):
+    def popUp(self, text=None, words=None, flags={}, move=True):
+        print("popup: {}".format(flags))
         # if text is None, the previous label in self.edit is kept
         # edit
         if text is None:
@@ -203,14 +198,11 @@ class LabelDialog(QtWidgets.QDialog):
         # words
         if words is not None:
             self.words.setText(str(words))
-        # quanlity
-        if quanlity is not None:
-            self.quanlity.content = quanlity
-        # language
-        if language is not None:
-            self.language.content = language
-        # font
-        if font is not None:
-            self.font.content = font
-        return (self.edit.text(), int(self.words.text()), self.quanlity.content, self.language.content, self.font.content)\
+        # flags
+        if flags:
+            for key, value in flags.items():
+                if key in self.boxes:
+                    self.boxes[key].content = value
+        return (self.edit.text(), int(self.words.text()), 
+            {k: v.content for (k,v) in self.boxes.items()})\
             if self.exec_() else None   # 返回编辑过的label

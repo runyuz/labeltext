@@ -5,6 +5,12 @@ track: true
 
 flags: null
 labels: null
+label_flags: {
+  "quality": ["high", "medium", "low"],
+  "language": ["Chinese", "English", "both"],
+  "font": ["print", "write"],
+  "shape": ["planar", "not planar"]
+}
 sort_labels: true
 validate_label: null
 show_label_text_field: true

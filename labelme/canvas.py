@@ -602,13 +602,11 @@ class Canvas(QtWidgets.QWidget):
         elif key == QtCore.Qt.Key_Return and self.canCloseShape():
             self.finalise()
 
-    def setLastLabel(self, text, words, quanlity, language, font):
+    def setLastLabel(self, text, words, flags):
         assert text
         self.shapes[-1].label = text
         self.shapes[-1].words = words
-        self.shapes[-1].quanlity = quanlity
-        self.shapes[-1].language = language
-        self.shapes[-1].font = font
+        self.shapes[-1].flags = flags
         self.shapesBackups.pop()
         self.storeShapes()
         return self.shapes[-1]
