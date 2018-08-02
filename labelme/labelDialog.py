@@ -153,11 +153,17 @@ class LabelDialog(QtWidgets.QDialog):
 
     def validate(self):
         text = self.edit.text()
+        word = self.words.text()
         if hasattr(text, 'strip'):
             text = text.strip()
         else:
             text = text.trimmed()
-        if text:
+        if hasattr(word, 'strip'):
+            word = word.strip()
+        else:
+            word = word.trimmed()
+        # Make sure the letter length is not empty   
+        if text and word:
             self.accept()
 
     def editPostProcess(self):

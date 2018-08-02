@@ -8,7 +8,7 @@ import pstats
 from labelme.shape import Shape
 
 lk_params = dict( winSize  = (15, 15),
-                  maxLevel = 2,
+                  maxLevel = 5,
                   criteria = (cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 10, 0.03))
 
 feature_params = dict( maxCorners = 100,
@@ -58,24 +58,28 @@ def track(src_path, dst_path, shapes):
         mask = np.zeros_like(src_gray)
         mask = cv.fillPoly(mask, QPoints2CV(shape.points, np.int32), (255,255,255))
         p0 = cv.goodFeaturesToTrack(src_gray, mask=mask, **feature_params)
+        if p0 is None or not len(p0):   # Check if no good feature exists
+            continue
         p1, trace_status = checkedTrace(src_gray, dst_gray, p0)
         p0 = p0[trace_status]
         p1 = p1[trace_status]
-        '''
-        for (x0, y0), (x1, y1) in zip(p0[:,0], p1[:,0]):
-            cv.circle(frame, (x1, y1), 2, red, -1)
-            cv.circle(frame, (x0, y0), 2, green, -1)
-        cv.imshow('emmm', frame)
-        '''
+
+        # for (x0, y0), (x1, y1) in zip(p0[:,0], p1[:,0]):
+        #     cv.circle(dst, (x1, y1), 2, red, -1)
+        #     cv.circle(dst, (x0, y0), 2, green, -1)
+        # cv.imshow('emmm', dst)
+        # cv.waitKey(0)
+        # cv.destroyAllWindows()
+
         if len(p0) < 4:
             continue
-        H, status = cv.findHomography(p0, p1, cv.RANSAC, 10.0)
+        H, status = cv.findHomography(p0, p1, cv.RANSAC, 1.0)
         cv_points = cv.perspectiveTransform(QPoints2CV(shape.points, np.float32), H)
         shape.points = CV2QPoints(cv_points)
         new_shapes.append(shape)
-    '''
-    pr.disable()
-    ps = pstats.Stats(pr).sort_stats('cumulative')
-    ps.print_stats()
-    '''
+    # '''
+    # pr.disable()
+    # ps = pstats.Stats(pr).sort_stats('cumulative')
+    # ps.print_stats()
+    # '''
     return new_shapes

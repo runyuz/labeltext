@@ -1,5 +1,5 @@
 #!/bin/bash
-N=1/24  # N seconds per frame
+N=1  # N seconds per frame
 echo "Input directory:"
 read in_dir
 echo "Output directory:"
@@ -25,6 +25,6 @@ do
     echo "+ mkdir ${out_dir}/${dir_name}"
     mkdir ${out_dir}/${dir_name}
     echo "Cutting ${video}..."
-    ffmpeg -i ${video} -f image2 -vf fps=fps=1/${N} ${out_dir}/${dir_name}/out%04d.png &> /dev/null
+    ffmpeg -i ${video} -f image2 -vf fps=fps=1/${N} ${out_dir}/${dir_name}/out%03d.png &> /dev/null
     echo "Finish cutting ${video}!"
 done
