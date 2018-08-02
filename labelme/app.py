@@ -668,13 +668,9 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         shape = self.labelList.get_shape_from_item(item)
         newValue = self.labelDialog.popUp\
             (item.text(), shape.words, shape.flags)
-        print(newValue)
         if newValue is None:
             return
         text, words, flags = newValue
-        print(text)
-        print(words)
-        print(flags)
         if not self.validateLabel(text):
             self.errorMessage('Invalid label',
                               "Invalid label '{}' with validation type '{}'"

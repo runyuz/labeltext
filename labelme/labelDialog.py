@@ -177,7 +177,6 @@ class LabelDialog(QtWidgets.QDialog):
         self.words.setText(num)
 
     def popUp(self, text=None, words=None, flags={}, move=True):
-        print("popup: {}".format(flags))
         # if text is None, the previous label in self.edit is kept
         # edit
         if text is None:
