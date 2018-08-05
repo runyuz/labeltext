@@ -132,6 +132,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
 
         # Whether we need to save or not.
         self.dirty = False
+        self.isCopy = False
 
         self._noSelectionSlot = False
 
@@ -279,6 +280,10 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
                       shortcuts['duplicate_polygon'], 'copy',
                       'Create a duplicate of the selected polygon',
                       enabled=False)
+        copyFrame = action('&Duplicate\nPolygons\nBetween\nFrame', self.copyPolygonFrame,
+                      shortcuts['duplicate_polygon_frame'], 'copy',
+                      'Create a duplicate of the selected polygons to next frame',
+                      enabled=True)
         undoLastPoint = action('Undo last point', self.canvas.undoLastPoint,
                                shortcuts['undo_last_point'], 'undo',
                                'Undo last drawn point', enabled=False)
@@ -364,7 +369,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         self.actions = struct(
             save=save, saveAs=saveAs, open=open_, close=close,
             lineColor=color1, fillColor=color2,
-            delete=delete, edit=edit, copy=copy,
+            delete=delete, edit=edit, copy=copy, copyFrame=copyFrame,
             undoLastPoint=undoLastPoint, undo=undo,
             addPoint=addPoint,
             createMode=createMode, editMode=editMode,
@@ -428,6 +433,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             createRectangleMode,
             editMode,
             copy,
+            copyFrame,
             delete,
             undo,
             None,
@@ -742,7 +748,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             self.addLabel(shape)
         self.canvas.loadShapes(shapes)
 
-    def loadLabels(self, shapes):
+    def loadLabels(self, shapes, copy_shape=[]):
         s = []
         for label, words, flags, points, line_color, fill_color in shapes:
             shape = Shape(label, words, flags)
@@ -754,7 +760,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
                 shape.line_color = QtGui.QColor(*line_color)
             if fill_color:
                 shape.fill_color = QtGui.QColor(*fill_color)
-        self.loadShapes(s)
+        self.loadShapes(s+copy_shape)
 
     def loadFlags(self, flags):
         self.flag_widget.clear()
@@ -810,6 +816,23 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         self.addLabel(self.canvas.copySelectedShape())
         # fix copy and delete
         self.shapeSelectionChanged(True)
+
+    def copyPolygonFrame(self):
+        if not self.isCopy:
+            self.togglePolygons(False)
+            self.actions.createMode.setEnabled(False)
+            self.actions.createRectangleMode.setEnabled(False)
+            self.actions.editMode.setEnabled(False)
+            self.actions.copy.setEnabled(False)
+            self.actions.delete.setEnabled(False)
+            self.isCopy = True
+        else:
+            self.isCopy = False
+            self.togglePolygons(True)
+            self.actions.createMode.setEnabled(True)
+            self.actions.createRectangleMode.setEnabled(True)
+            self.actions.editMode.setEnabled(True)
+        return
 
     def labelSelectionChanged(self):
         item = self.currentItem()
@@ -913,7 +936,6 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
     def loadFile(self, filename=None):
         """Load the specified file, or the last opened file if None."""
         # changing fileListWidget loads file
-
         prev_filename = self.imagePath
         self.resetState()
         self.canvas.setEnabled(False)
@@ -972,18 +994,26 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
                 .format(filename, ','.join(formats)))
             self.status("Error reading %s" % filename)
             return False
+        copy_shapes = []
         if self._config['track'] or self._config['keep_prev']:
             prev_shapes = self.canvas.shapes
+        if self.isCopy:
+            copy_shapes = [s for s in self.canvas.shapes if self.canvas.isVisible(s)]
+            self.isCopy = False
         self.image = image
         self.filename = filename
         self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image))  # 清空了self.canvas.shapes
         if self._config['flags']:
             self.loadFlags({k: False for k in self._config['flags']})
         if self.labelFile:
-            self.loadLabels(self.labelFile.shapes)
+            self.loadLabels(self.labelFile.shapes, copy_shapes)
             if self.labelFile.flags is not None:
                 self.loadFlags(self.labelFile.flags)
-            self.setClean()
+            if copy_shapes:
+                self.setEditMode()
+                self.setDirty()
+            else:
+                self.setClean()
         if not self.canvas.shapes:  # labelFile里没有shape
             if self._config['track'] and prev_filename and prev_shapes:
                 new_shapes = track(prev_filename, filename, prev_shapes)
