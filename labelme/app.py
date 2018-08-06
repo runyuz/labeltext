@@ -389,7 +389,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
                 undo, undoLastPoint, addPoint,
             ),
             onLoadActive=(close, createMode, createRectangleMode, editMode),
-            onShapesPresent=(saveAs, hideAll, showAll),
+            onShapesPresent=(saveAs, hideAll, showAll, delete),
         )
 
         self.canvas.edgeSelected.connect(self.actions.addPoint.setEnabled)
@@ -525,13 +525,13 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         addActions(self.menus.edit, actions + self.actions.editMenu)
 
     def setDirty(self):
+        self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
         if self._config['auto_save']:
             label_file = os.path.splitext(self.imagePath)[0] + '.json'
             self.saveLabels(label_file)
             return
         self.dirty = True
         self.actions.save.setEnabled(True)
-        self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
         title = __appname__
         if self.filename is not None:
             title = '{} - {}*'.format(title, self.filename)
@@ -608,6 +608,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         self.actions.undo.setEnabled(not drawing)
 
     def toggleDrawMode(self, edit=True, createMode='polygon'):
+        self.actions.copyFrame.setEnabled(False)
         self.canvas.setEditing(edit)
         self.canvas.createMode = createMode
         if createMode == 'polygon':
@@ -627,6 +628,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         self.toggleDrawMode(False, createMode='polygon')
 
     def setEditMode(self):
+        self.actions.copyFrame.setEnabled(True)
         self.canvas.setEditing(True)
         self.actions.createMode.setEnabled(True)
         self.actions.createRectangleMode.setEnabled(True)
@@ -720,7 +722,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
                 item.setSelected(True)
             else:
                 self.labelList.clearSelection()
-        self.actions.delete.setEnabled(selected)
+        self.actions.delete.setEnabled(selected or self.canvas.SelectedListExist())
         self.actions.copy.setEnabled(selected)
         self.actions.edit.setEnabled(selected)
         self.actions.shapeLineColor.setEnabled(selected)
@@ -743,10 +745,10 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         item = self.labelList.get_item_from_shape(shape)
         self.labelList.takeItem(self.labelList.row(item))
 
-    def loadShapes(self, shapes):
-        for shape in shapes:
+    def loadShapes(self, shapes, copy_shape=[]):
+        for shape in shapes+copy_shape:
             self.addLabel(shape)
-        self.canvas.loadShapes(shapes)
+        self.canvas.loadShapes(shapes, copy_shape)
 
     def loadLabels(self, shapes, copy_shape=[]):
         s = []
@@ -760,7 +762,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
                 shape.line_color = QtGui.QColor(*line_color)
             if fill_color:
                 shape.fill_color = QtGui.QColor(*fill_color)
-        self.loadShapes(s+copy_shape)
+        self.loadShapes(s, copy_shape)
 
     def loadFlags(self, flags):
         self.flag_widget.clear()
@@ -819,7 +821,6 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
 
     def copyPolygonFrame(self):
         if not self.isCopy:
-            self.togglePolygons(False)
             self.actions.createMode.setEnabled(False)
             self.actions.createRectangleMode.setEnabled(False)
             self.actions.editMode.setEnabled(False)
@@ -828,7 +829,6 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             self.isCopy = True
         else:
             self.isCopy = False
-            self.togglePolygons(True)
             self.actions.createMode.setEnabled(True)
             self.actions.createRectangleMode.setEnabled(True)
             self.actions.editMode.setEnabled(True)
@@ -998,7 +998,10 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         if self._config['track'] or self._config['keep_prev']:
             prev_shapes = self.canvas.shapes
         if self.isCopy:
-            copy_shapes = [s for s in self.canvas.shapes if self.canvas.isVisible(s)]
+            if self.canvas.selectedList is not None:
+                copy_shapes = self.canvas.selectedList
+            elif self.canvas.selectedShape:
+                copy_shapes.append(self.canvas.selectedShape)
             self.isCopy = False
         self.image = image
         self.filename = filename
@@ -1006,6 +1009,8 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         if self._config['flags']:
             self.loadFlags({k: False for k in self._config['flags']})
         if self.labelFile:
+            if self._config['track'] and copy_shapes:
+                copy_shapes = track(prev_filename, filename, copy_shapes, True)
             self.loadLabels(self.labelFile.shapes, copy_shapes)
             if self.labelFile.flags is not None:
                 self.loadFlags(self.labelFile.flags)
@@ -1015,7 +1020,10 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
             else:
                 self.setClean()
         if not self.canvas.shapes:  # labelFile里没有shape
-            if self._config['track'] and prev_filename and prev_shapes:
+            if copy_shapes:
+                self.loadShapes(copy_shapes)
+                self.setDirty()
+            elif self._config['track'] and prev_filename and prev_shapes:
                 new_shapes = track(prev_filename, filename, prev_shapes)
                 self.loadShapes(new_shapes)
                 self.setDirty()
@@ -1235,11 +1243,17 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
 
     def deleteSelectedShape(self):
         yes, no = QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No
-        msg = 'You are about to permanently delete this polygon, ' \
+        msg = 'You are about to permanently delete selected polygon(s), ' \
               'proceed anyway?'
         if yes == QtWidgets.QMessageBox.warning(self, 'Attention', msg,
                                                 yes | no):
-            self.remLabel(self.canvas.deleteSelected())
+            if self.canvas.SelectedListExist():
+                self.canvas.deleteSelectedList()
+                for shape in self.canvas.selectedList:
+                    self.remLabel(shape)
+                self.canvas.resetSelectedList()
+            else:
+                self.remLabel(self.canvas.deleteSelected())
             self.setDirty()
             if self.noShapes():
                 for action in self.actions.onShapesPresent:

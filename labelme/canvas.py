@@ -44,6 +44,7 @@ class Canvas(QtWidgets.QWidget):
         self.current = None
         self.selectedShape = None  # save the selected shape here
         self.selectedShapeCopy = None
+        self.selectedList = None
         self.lineColor = QtGui.QColor(0, 0, 255)
         # self.line represents
         # if createMode == 'polygon': edge from last point to current
@@ -282,6 +283,13 @@ class Canvas(QtWidgets.QWidget):
                     self.setHiding()
                     self.drawingPolygon.emit(True)
                     self.update()
+            elif QtWidgets.QApplication.keyboardModifiers() == QtCore.Qt.ShiftModifier \
+                 and (self.selectedShape or self.selectedList is not None):
+                if self.selectedList is None:
+                    self.selectedList = [self.selectedShape]
+                self.selectShapePointList(pos)
+                self.prevPoint = pos
+                self.repaint()
             else:
                 self.selectShapePoint(pos)
                 self.prevPoint = pos
@@ -352,9 +360,25 @@ class Canvas(QtWidgets.QWidget):
         self.selectionChanged.emit(True)
         self.update()
 
+    def deselectList(self):
+        if self.selectedList is None:
+            return
+        for shape in self.selectedList:
+            shape.selected = False
+        self.setHiding(False)
+        self.update()
+        self.selectedList = None
+
+    def SelectedListExist(self):
+        return self.selectedList is not None
+
+    def resetSelectedList(self):
+        self.selectedList = None
+
     def selectShapePoint(self, point):
         """Select the first shape created which contains this point."""
         self.deSelectShape()
+        self.deselectList()
         if self.selectedVertex():  # A vertex is marked for selection.
             index, shape = self.hVertex, self.hShape
             shape.highlightVertex(index, shape.MOVE_VERTEX)
@@ -368,6 +392,37 @@ class Canvas(QtWidgets.QWidget):
                 self.selectionChanged.emit(True)
                 return
 
+    def selectShapePointList(self, point):
+        if self.selectedVertex():  # A vertex is marked for selection.
+            index, shape = self.hVertex, self.hShape
+            shape.highlightVertex(index, shape.MOVE_VERTEX)
+            self.deselectList()
+            self.deSelectShape()
+            return
+        FoundShape = None
+        for shape in reversed(self.shapes):
+            if self.isVisible(shape) and shape.containsPoint(point):
+                FoundShape = shape
+        if not FoundShape:
+            self.deselectList()
+            self.deSelectShape()
+            return
+        self.deSelectShape(True)
+        if FoundShape in self.selectedList:
+            FoundShape.selected = False
+            self.setHiding(False)
+            self.update()
+            self.selectedList.remove(FoundShape)
+            if not self.selectedList:
+                self.deselectList()          
+        else:
+            FoundShape.selected = True
+            self.selectedShape = FoundShape
+            self.calculateOffsets(FoundShape, point)
+            self.setHiding()
+            self.selectionChanged.emit(True)
+            self.selectedList.append(FoundShape)
+            
     def calculateOffsets(self, shape, point):
         rect = shape.boundingRect()
         x1 = rect.x() - point.x()
@@ -405,9 +460,9 @@ class Canvas(QtWidgets.QWidget):
             return True
         return False
 
-    def deSelectShape(self):
+    def deSelectShape(self, isList=False):
         if self.selectedShape:
-            self.selectedShape.selected = False
+            self.selectedShape.selected = isList
             self.selectedShape = None
             self.setHiding(False)
             self.selectionChanged.emit(False)
@@ -421,6 +476,14 @@ class Canvas(QtWidgets.QWidget):
             self.selectedShape = None
             self.update()
             return shape
+    
+    def deleteSelectedList(self):
+        if self.selectedList is not None:
+            for shape in self.selectedList:
+                self.shapes.remove(shape)
+            self.storeShapes()
+            self.selectedShape = None
+            self.update()
 
     def copySelectedShape(self):
         if self.selectedShape:
@@ -639,9 +702,13 @@ class Canvas(QtWidgets.QWidget):
         self.shapes = []
         self.repaint()
 
-    def loadShapes(self, shapes):
+    def loadShapes(self, shapes, copy_shape=[]):
         self.shapes = list(shapes)
         self.storeShapes()
+        # Make sure that the copy step can be undone
+        if copy_shape:
+            self.shapes = list(shapes + copy_shape)
+            self.storeShapes()
         self.current = None
         self.repaint()
 

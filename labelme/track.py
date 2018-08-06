@@ -19,9 +19,7 @@ MIN_D = 3
 MAX_D = 13
 MAX_W = 20
 
-velocity = 0
-prev_points = None
-path = None
+search_range = [[0,0], [25,25], [25,-25]]
 
 def findMaxDistance(p):
     if len(p) < 2:
@@ -78,12 +76,14 @@ def findParameter(points_list):
     feature_params["minDistance"] = min_distance
     feature_params["blockSize"] = min_distance
     
-    print("===Parameters:")
-    print(lk_params)
-    print(feature_params)
+    # print("===Parameters:")
+    # print(lk_params)
+    # print(feature_params)
     return True
 
 def translate(image, x, y):
+    if not x and not y: # x=0 and y=0, return the original image
+        return image
     M = np.float32([[1, 0, x], [0, 1, y]])
     shifted = cv.warpAffine(image, M, (image.shape[1], image.shape[0]))
     return shifted
@@ -91,7 +91,7 @@ def translate(image, x, y):
 green = (0, 255, 0)
 red = (0, 0, 255)
 
-def track(src_path, dst_path, shapes):
+def track(src_path, dst_path, shapes, isCopy=False):
     # pr = cProfile.Profile()
     # pr.enable()
     src = cv.imread(src_path)
@@ -100,19 +100,32 @@ def track(src_path, dst_path, shapes):
     dst_gray = cv.cvtColor(dst, cv.COLOR_BGR2GRAY)
     new_shapes = []
     for shape in shapes:
-        points_list = QPoints2CV(shape.points, np.int32)
-
-        if not findParameter(points_list[0]):
+        points_list_back_up = QPoints2CV(shape.points, np.int32)
+        points_list = None
+        if not findParameter(points_list_back_up[0]):
             continue
-        mask = np.zeros_like(src_gray)
-        mask = cv.fillPoly(mask, points_list, (255,255,255))
-        p0 = cv.goodFeaturesToTrack(src_gray, mask=mask, **feature_params)
-        if p0 is None or not len(p0):   # Check if no good feature exists
+        issuccess = False
+        for velocity in search_range:
+            shifted = translate(src_gray, velocity[0], velocity[1])
+            points_list = np.int32(points_list_back_up + velocity)
+            mask = np.zeros_like(shifted)
+            mask = cv.fillPoly(mask, points_list, (255,255,255))
+            p0 = cv.goodFeaturesToTrack(shifted, mask=mask, **feature_params)
+            if p0 is None or not len(p0):   # Check if no good feature exists
+                continue
+            p1, trace_status = checkedTrace(shifted, dst_gray, p0)
+            p0 = p0[trace_status]
+            p1 = p1[trace_status]
+            if len(p0) > 3:
+                print("success!")
+                issuccess = True
+                print(velocity)
+                break
+        if not issuccess:
+            if isCopy:
+                new_shapes.append(shape)
+            print("Fail!")
             continue
-        p1, trace_status = checkedTrace(src_gray, dst_gray, p0)
-        p0 = p0[trace_status]
-        p1 = p1[trace_status]
-
         # for (x0, y0), (x1, y1) in zip(p0[:,0], p1[:,0]):
         #     cv.circle(dst, (x1, y1), 2, red, -1)
         #     cv.circle(dst, (x0, y0), 2, green, -1)
@@ -120,8 +133,6 @@ def track(src_path, dst_path, shapes):
         # cv.waitKey(0)
         # cv.destroyAllWindows()
 
-        if len(p0) < 4:
-           continue
         H, status = cv.findHomography(p0, p1, cv.RANSAC, 1.0)
         cv_points = cv.perspectiveTransform(np.float32(points_list), H)
         shape.points = CV2QPoints(cv_points)

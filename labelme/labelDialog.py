@@ -12,8 +12,6 @@ from labelme.lib import newIcon
 # TODO(unknown):
 # - Calculate optimal position so as not to go out of screen area.
 
-def wordsValidator():
-    return QtGui.QRegExpValidator(QtCore.QRegExp(r'^[^ \t][0-9]+'), None)
 
 class LabelQLineEdit(QtWidgets.QLineEdit):
 
@@ -89,7 +87,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.wordsLabel = QtWidgets.QLabel('Letters:', self)
         self.words = QtWidgets.QLineEdit()
         self.words.setPlaceholderText(words)
-        self.words.setValidator(wordsValidator())
+        self.words.setValidator(QtGui.QIntValidator(0,999, self))
         self.words.editingFinished.connect(self.wordsPostProcess)
         wordsLayout = QtWidgets.QHBoxLayout()
         wordsLayout.addWidget(self.wordsLabel)
