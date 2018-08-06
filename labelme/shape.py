@@ -10,7 +10,7 @@ from labelme import logger
 
 
 DEFAULT_LINE_COLOR = QtGui.QColor(0, 255, 0, 128)
-DEFAULT_FILL_COLOR = QtGui.QColor(255, 0, 0, 128)
+DEFAULT_FILL_COLOR = QtGui.QColor(128, 0, 0, 80)
 DEFAULT_SELECT_LINE_COLOR = QtGui.QColor(255, 255, 255)
 DEFAULT_SELECT_FILL_COLOR = QtGui.QColor(0, 128, 255, 155)
 DEFAULT_VERTEX_FILL_COLOR = QtGui.QColor(0, 255, 0, 255)
@@ -118,7 +118,7 @@ class Shape(object):
             # Uncommenting the following line will draw 2 paths
             # for the 1st vertex, and make it non-filled, which
             # may be desirable.
-            self.drawVertex(vrtx_path, 0)
+            # self.drawVertex(vrtx_path, 0)
 
             for i, p in enumerate(self.points):
                 line_path.lineTo(p)
@@ -130,9 +130,14 @@ class Shape(object):
             painter.drawPath(vrtx_path)
             painter.fillPath(vrtx_path, self.vertex_fill_color)
             if self.fill:
-                color = self.select_fill_color \
-                    if self.selected else self.fill_color
+                color = DEFAULT_SELECT_FILL_COLOR if self.selected else DEFAULT_FILL_COLOR
                 painter.fillPath(line_path, color)
+            
+            # Error for the following code, generate black area ???
+            # if self.fill:
+            #     color = self.select_fill_color
+            #         if self.selected else self.fill_color
+            #     painter.fillPath(line_path, color)
 
     def drawVertex(self, path, i):
         d = self.point_size / self.scale
