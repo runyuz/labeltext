@@ -700,6 +700,7 @@ class Canvas(QtWidgets.QWidget):
     def loadPixmap(self, pixmap):
         self.pixmap = pixmap
         self.shapes = []
+        self.selectedShape = None
         self.repaint()
 
     def loadShapes(self, shapes, copy_shape=[]):
