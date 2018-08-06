@@ -1008,9 +1008,11 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image))  # 清空了self.canvas.shapes
         if self._config['flags']:
             self.loadFlags({k: False for k in self._config['flags']})
-        if self.labelFile:
-            if self._config['track'] and copy_shapes:
+        if copy_shapes:
+            if self._config['track']:
                 copy_shapes = track(prev_filename, filename, copy_shapes, True)
+            self.canvas.selectedList = copy_shapes
+        if self.labelFile:
             self.loadLabels(self.labelFile.shapes, copy_shapes)
             if self.labelFile.flags is not None:
                 self.loadFlags(self.labelFile.flags)
