@@ -16,6 +16,8 @@ DEFAULT_SELECT_FILL_COLOR = QtGui.QColor(0, 128, 255, 155)
 DEFAULT_VERTEX_FILL_COLOR = QtGui.QColor(0, 255, 0, 255)
 DEFAULT_HVERTEX_FILL_COLOR = QtGui.QColor(255, 0, 0)
 
+def FarAway(a, b):
+    return abs(a-b) > 10
 
 class Shape(object):
 
@@ -118,7 +120,7 @@ class Shape(object):
             # Uncommenting the following line will draw 2 paths
             # for the 1st vertex, and make it non-filled, which
             # may be desirable.
-            # self.drawVertex(vrtx_path, 0)
+            self.drawVertex(vrtx_path, 0)
 
             for i, p in enumerate(self.points):
                 line_path.lineTo(p)
@@ -195,6 +197,24 @@ class Shape(object):
 
     def moveVertexBy(self, i, offset):
         self.points[i] = self.points[i] + offset
+
+    def moveVertexScale(self, i, offset, orig_shape):
+        if i == 0:
+            self.moveVertexBy(i, offset)
+            return
+        x0, y0 = orig_shape[0].x(), orig_shape[0].y()
+        xi, yi = orig_shape[i].x(), orig_shape[i].y()
+        self.moveVertexBy(i, offset)
+        xi_2, yi_2 = self.points[i].x(), self.points[i].y()
+        for shape, shape_o in zip(self.points[1:i] + self.points[i+1:],
+                orig_shape[1:i] + orig_shape[i+1:]):
+            x,y = shape_o.x(), shape_o.y()
+            if FarAway(xi, x0):
+                x = int(((xi_2-x0)*(x-x0)/(xi-x0))+x0)
+            if FarAway(yi, y0):
+                y = int(((yi_2-y0)*(y-y0)/(yi-y0))+y0)
+            shape.setX(x)
+            shape.setY(y)
 
     def highlightVertex(self, i, action):
         self._highlightIndex = i

@@ -62,6 +62,7 @@ class Canvas(QtWidgets.QWidget):
         self.hVertex = None
         self.hEdge = None
         self.movingShape = False
+        self.shiftMovingShape = None
         self._painter = QtGui.QPainter()
         self._cursor = CURSOR_DEFAULT
         # Menus:
@@ -183,14 +184,17 @@ class Canvas(QtWidgets.QWidget):
         self.movingShape = False
         if QtCore.Qt.LeftButton & ev.buttons():
             if self.selectedVertex():
-                self.boundedMoveVertex(pos)
+                scale = (QtWidgets.QApplication.keyboardModifiers() == QtCore.Qt.ShiftModifier)
+                self.boundedMoveVertex(pos, scale)
                 self.repaint()
                 self.movingShape = True
-            elif self.selectedShape and self.prevPoint:
-                self.overrideCursor(CURSOR_MOVE)
-                self.boundedMoveShape(self.selectedShape, pos)
-                self.repaint()
-                self.movingShape = True
+            else:
+                self.shiftMovingShape = None
+                if self.selectedShape and self.prevPoint:
+                    self.overrideCursor(CURSOR_MOVE)
+                    self.boundedMoveShape(self.selectedShape, pos)
+                    self.repaint()
+                    self.movingShape = True
             return
 
         # Just hovering over the canvas, 2 posibilities:
@@ -311,6 +315,7 @@ class Canvas(QtWidgets.QWidget):
         elif ev.button() == QtCore.Qt.LeftButton and self.selectedShape:
             self.overrideCursor(CURSOR_GRAB)
         if self.movingShape:
+            self.shiftMovingShape = None
             self.storeShapes()
             self.shapeMoved.emit()
 
@@ -431,12 +436,19 @@ class Canvas(QtWidgets.QWidget):
         y2 = (rect.y() + rect.height()) - point.y()
         self.offsets = QtCore.QPoint(x1, y1), QtCore.QPoint(x2, y2)
 
-    def boundedMoveVertex(self, pos):
+    def boundedMoveVertex(self, pos, scale=False):
         index, shape = self.hVertex, self.hShape
         point = shape[index]
         if self.outOfPixmap(pos):
             pos = self.intersectionPoint(point, pos)
-        shape.moveVertexBy(index, pos - point)
+        if scale:
+            if self.shiftMovingShape is None:
+                self.shiftMovingShape = []
+                for s in shape:
+                    self.shiftMovingShape.append(QtCore.QPoint(s.x(), s.y()))
+            shape.moveVertexScale(index, pos - point, self.shiftMovingShape)
+        else:
+            shape.moveVertexBy(index, pos - point)
 
     def boundedMoveShape(self, shape, pos):
         if self.outOfPixmap(pos):

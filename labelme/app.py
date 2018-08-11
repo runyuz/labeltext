@@ -839,6 +839,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         if item and self.canvas.editing():
             self._noSelectionSlot = True
             shape = self.labelList.get_shape_from_item(item)
+            self.canvas.deselectList()
             self.canvas.selectShape(shape)
 
     def labelItemChanged(self, item):
