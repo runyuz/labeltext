@@ -7,8 +7,8 @@ A derivative labeling software (in development) from labelme (https://github.com
 
 - Ubuntu / macOS/ Windows
 - Python3
-- PyQt5
-- OpenCV3.4
+- [PyQt5](http://www.riverbankcomputing.co.uk/software/pyqt/intro)
+- [OpenCV3.4](https://pypi.org/project/opencv-python/)
 
 ## Installation
 
@@ -19,7 +19,7 @@ We recommand you to set up the virtual environment first to prevent conflict bet
 pip install pyqt5
 pip install opencv-python
 git clone https://github.com/runyuz/labeltext
-#tar -zxvf labeltext.tar.gz
+tar -zxvf labeltext.tar.gz
 cd labeltext
 pip install -e .   # install the project
 
