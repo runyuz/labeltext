@@ -3,7 +3,28 @@ A derivative labeling software (in development) from labelme (https://github.com
 
 --------------------------
 
+## Requirement
+
+- Ubuntu / macOS/ Windows
+- Python3
+- PyQt5
+- OpenCV3.4
+
 ## Installation
+
+We recommand you to set up the virtual environment first to prevent conflict between projects. See [virtualenv](https://virtualenv.pypa.io/en/stable/).
+
+### Ubuntu
+```bash
+pip install pyqt5
+pip install opencv-python
+git clone https://github.com/runyuz/labeltext
+#tar -zxvf labeltext.tar.gz
+cd labeltext
+pip install -e .   # install the project
+
+labelme    # start annotation
+```
 
 ### macOS
 ```bash
@@ -16,6 +37,17 @@ brew install pyqt  # maybe pyqt5
 pip install -e .    # in the project directory
 
 labelme # open gui and start annotation
+```
+
+### Windows
+```bash
+pip install pyqt5
+pip install opencv-python
+# download the source code and extract
+cd PROJECTPATH
+pip install -e .   # install the project
+
+labelme    # start annotation
 ```
 
 ## Usage
