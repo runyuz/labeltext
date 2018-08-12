@@ -74,7 +74,9 @@ class Canvas(QtWidgets.QWidget):
     def storeShapes(self):
         shapesBackup = []
         for shape in self.shapes:
-            shapesBackup.append(shape.copy())
+            newShape = shape.copy()
+            newShape.selected = False
+            shapesBackup.append(newShape)
         if len(self.shapesBackups) >= 10:
             self.shapesBackups = self.shapesBackups[-9:]
         self.shapesBackups.append(shapesBackup)
@@ -87,12 +89,15 @@ class Canvas(QtWidgets.QWidget):
 
     def restoreShape(self):
         if not self.isShapeRestorable:
-            return
+            return False
+        self.deSelectShape()
+        self.selectedList = None
         self.shapesBackups.pop()  # latest
         shapesBackup = self.shapesBackups.pop()
         self.shapes = shapesBackup
         self.storeShapes()
         self.repaint()
+        return True
 
     def enterEvent(self, ev):
         self.overrideCursor(self._cursor)
@@ -357,8 +362,8 @@ class Canvas(QtWidgets.QWidget):
             self.current.popPoint()
             self.finalise()
 
-    def selectShape(self, shape):
-        self.deSelectShape()
+    def selectShape(self, shape, isList=False):
+        self.deSelectShape(isList)
         shape.selected = True
         self.selectedShape = shape
         self.setHiding()

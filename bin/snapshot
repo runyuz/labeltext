@@ -1,4 +1,6 @@
 #!/bin/bash
+# Cut all the videos in one directory with ffmpeg.
+Input the 
 N=1  # N seconds per frame
 echo "Input directory:"
 read in_dir

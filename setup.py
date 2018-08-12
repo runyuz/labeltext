@@ -24,6 +24,7 @@ install_requires = [
     'Pillow>=2.8.0',
     'PyYAML',
     'qtpy',
+    'opencv-python',
 ]
 
 # Find python binding for qt with priority:

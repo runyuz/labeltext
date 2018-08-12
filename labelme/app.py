@@ -585,11 +585,12 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
     # Callbacks
 
     def undoShapeEdit(self):
-        self.canvas.restoreShape()
-        self.labelList.clear()
-        self.uniqLabelList.clear()
-        self.loadShapes(self.canvas.shapes)
-        self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
+        if self.canvas.restoreShape():
+            self.setDirty()
+            self.labelList.clear()
+            self.uniqLabelList.clear()
+            self.loadShapes(self.canvas.shapes)
+            self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
 
     def tutorial(self):
         url = 'https://github.com/wkentaro/labelme/tree/master/examples/tutorial'  # NOQA
@@ -839,8 +840,7 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         if item and self.canvas.editing():
             self._noSelectionSlot = True
             shape = self.labelList.get_shape_from_item(item)
-            self.canvas.deselectList()
-            self.canvas.selectShape(shape)
+            self.canvas.selectShape(shape, self.canvas.selectedList is not None)
 
     def labelItemChanged(self, item):
         shape = self.labelList.get_shape_from_item(item)
@@ -1038,6 +1038,9 @@ class MainWindow(QtWidgets.QMainWindow, WindowMixin):
         self.paintCanvas()
         self.addRecentFile(self.filename)
         self.toggleActions(True)
+        # if self.isCopy:
+        #     self.isCopy = False
+        #     self.copyPolygonFrame()
         self.status("Loaded %s" % os.path.basename(str(filename)))
         return True
 
@@ -1406,6 +1409,12 @@ def main():
         '--keep-prev',
         action='store_true',
         help='keep annotation of previous frame',
+        default=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        '--track',
+        action='store_true',
+        help='track the previous frame',
         default=argparse.SUPPRESS,
     )
     args = parser.parse_args()
