@@ -1,0 +1,50 @@
+#!/bin/bash
+# INPUT is a directory contains the the work from all students
+# └── INPUT
+#     ├── studentA
+#     │   ├── video1
+#     │   └── video2
+#     ├── studentB
+#     │   └── video2
+#     └── studentC
+#         └── video1
+# The corresponding output looks like:
+# └── OUTPUT
+#     ├── video1
+#     ├── video2
+#     └── video3
+if [ $# != 2 ]; then
+    echo "Error: [usage] combine INPUT_DIR OUTPUT_DIR"
+    exit 1
+    EOF
+fi
+
+# read from argument
+in_dir=$1
+out_dir=$2
+
+if [ ! -d ${in_dir} ]; then
+    echo "Error: input directory does not exist."
+    exit 1
+    EOF
+fi
+
+if [ ! -d ${out_dir} ]; then
+    echo "+ mkdir ${out_dir}"
+    mkdir ${out_dir}
+else
+    echo "+ rm -rf ${out_dir}/*"
+    rm -r ${out_dir}/*
+fi
+
+for video_dir in `find ${in_dir} -type d -depth 2`
+do
+    echo "Combine ${video_dir}..."
+    video=$(basename ${video_dir})
+    out_video_dir="${out_dir}/${video}"
+    if [ -d ${out_video_dir} ]; then
+        python combine.py ${video_dir} ${out_video_dir}
+    else
+        cp -r ${video_dir} ${out_video_dir}
+    fi
+done
