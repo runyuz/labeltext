@@ -28,8 +28,9 @@ labelme    # start annotation
 
 ### macOS
 ```bash
-# You can set up the virtual environment first to prevent conflict between projects (not necessary)
+# download the source code and extract
 cd PROJECTPATH
+# set up the virtual environment (optional)
 python3 -m venv env
 source env/bin/activate # activate the virtual environment
 # macOS Sierra
