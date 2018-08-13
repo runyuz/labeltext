@@ -19,7 +19,7 @@ MIN_D = 3
 MAX_D = 13
 MAX_W = 20
 
-search_range = [[0,0], [25,25], [25,-25]]
+search_range = [[0,0]]
 
 def findMaxDistance(p):
     if len(p) < 2:
